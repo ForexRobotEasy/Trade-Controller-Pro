@@ -1,0 +1,125 @@
+
+// Program: Trade Controller Pro
+// Developer: Forex Robot Easy Team
+// Developer's site: forexroboteasy.com
+
+// Import necessary libraries
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\AccountInfo.mqh>
+
+// Declare global variables
+CTrade trade;
+CPositionInfo positionInfo;
+CSymbolInfo symbolInfo;
+CAccountInfo accountInfo;
+
+// Function to calculate risk percentage
+double CalculateRiskPercentage(double stopLoss, double balance)
+{
+    double equity = accountInfo.Equity();
+    double freeMargin = accountInfo.MarginFree();
+    
+    // Calculate risk percentage
+    double riskPercentage = (stopLoss * balance) / (equity - (stopLoss * balance)) * 100;
+
+    return riskPercentage;
+}
+
+// Function to calculate profit based on PIPs and account currency
+double CalculateProfit(double pips, double volume)
+{
+    double profit = symbolInfo.Point() * pips * volume;
+
+    return profit;
+}
+
+// Function to close all open or pending trades for a specific symbol
+void CloseAllTradesForSymbol(string symbol)
+{
+    int totalPositions = positionInfo.Total();
+    
+    // Loop through all positions
+    for (int i = 0; i < totalPositions; i++)
+    {
+        if (positionInfo.SelectByIndex(i))
+        {
+            string positionSymbol = positionInfo.Symbol();
+            
+            // Check if position symbol matches the specified symbol
+            if (positionSymbol == symbol)
+            {
+                trade.PositionClose(positionInfo.Ticket());
+            }
+        }
+    }
+}
+
+// Function to close all open or pending trades
+void CloseAllTrades()
+{
+    int totalPositions = positionInfo.Total();
+    
+    // Loop through all positions
+    for (int i = 0; i < totalPositions; i++)
+    {
+        if (positionInfo.SelectByIndex(i))
+        {
+            trade.PositionClose(positionInfo.Ticket());
+        }
+    }
+}
+
+// Entry point of the program
+int OnInit()
+{
+    // Initialize trade, positionInfo, symbolInfo, and accountInfo objects
+    trade.SetExpertName('Trade Controller Pro');
+    positionInfo.Refresh();
+    symbolInfo.Refresh(Symbol());
+    accountInfo.Refresh();
+
+    return(INIT_SUCCEEDED);
+}
+
+// Main program loop
+void OnTick()
+{
+    // Get bid and ask prices
+    double bid = symbolInfo.Bid();
+    double ask = symbolInfo.Ask();
+    
+    // Calculate spread pips
+    double spreadPips = symbolInfo.Spread() / symbolInfo.Point();
+
+    // Display bid, ask, and spread pips in the dashboard
+    // ...
+
+    // Display account balance and equity in the dashboard
+    // ...
+
+    // Calculate risk percentage
+    double stopLoss = 50.0; // Example stop loss value
+    double balance = accountInfo.Balance();
+    double riskPercentage = CalculateRiskPercentage(stopLoss, balance);
+
+    // Calculate profit based on PIPs and account currency
+    double pips = 100.0; // Example pips value
+    double volume = 0.1; // Example trade volume
+    double profit = CalculateProfit(pips, volume);
+
+    // Close all open or pending trades for a specific symbol with a single click
+    string symbolToClose = 'EURUSD'; // Example symbol to close
+    CloseAllTradesForSymbol(symbolToClose);
+
+    // Close all open or pending trades altogether with a single click
+    CloseAllTrades();
+}
+
+// Program termination
+void OnDeinit(const int reason)
+{
+    // Perform necessary cleanup
+    // ...
+}
